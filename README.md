@@ -44,16 +44,17 @@ struct AType {
     ...
 };
 
-MPML_ADD(AType, REG_TYPES);
+MPML_ADD(AType, REG_TYPES); // <--- Here we add the type 'AType'
 
 struct AnotherType {
     ...
 };
 
-MPML_ADD(AnotherType, REG_TYPES);
+MPML_ADD(AnotherType, REG_TYPES); // <--- Here we add the another type called 'AnotherType'
+
 ```
 
-Finally, we can use **_MPML_TYPES_** to get the typelist so far. 
+Finally, we can use **_MPML_TYPES_** anywhere to get the typelist so far. 
 
 In the example, given an instance of a class X we calculate the ancestors and iterate over the types. On each iteration we cast our pointer to the current iteration type and print out the type info. However, we can do more productive things like for instance serializing the class.
 
