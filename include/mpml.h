@@ -88,7 +88,7 @@ namespace mpml {
         using type = at_t<I - 1, typelist<TS...>>;
     };
 
-    // 'get_filtered': given a type list, return another type list where contained types are filtered according to a predicate
+    // 'get_filtered': given a type list, return another type list where the contained types are filtered according to a predicate
     template<typename TL, template<typename>class PRED>
     struct get_filtered;
 
@@ -110,7 +110,7 @@ namespace mpml {
         >;
     };
 
-    // 'get_the_best': given a type list and a type comparator, return the 'get_the_best' type given a template comparator
+    // 'get_the_best': given a type list and a type comparator, return the best type according to the comparator
     template<typename TL, template<typename,typename>class CMP>
     struct get_the_best;
 
