@@ -67,19 +67,33 @@ namespace mpml {
     template<typename T, typename TL>    struct push_front;
     template<typename TL>                struct pop_front;
     template<std::size_t I, typename TL> struct at;
+    template<typename TL>                struct back;
+    template<typename TL>                struct front;
 
     template<typename T, typename TL>    using push_back_t  = typename push_back<T, TL>::type;
     template<typename T, typename TL>    using push_front_t = typename push_front<T, TL>::type ;
     template<typename TL>                using pop_front_t  = typename pop_front<TL>::type;
     template<std::size_t I, typename TL> using at_t         = typename at<I, TL>::type;
+    template<typename TL>                using back_t       = typename at<TL::size - 1, TL>::type;
+    template<typename TL>                using front_t      = typename at<0, TL>::type;
 
     template<typename T, typename ...TS> struct push_back <T, typelist<TS...>> { using type = typelist<TS..., T>; };
     template<typename T, typename ...TS> struct push_front<T, typelist<TS...>> { using type = typelist<T, TS...>; };
-    template<typename T, typename ...TS> struct pop_front <typelist<T, TS...>> { using type = typelist<TS...>;    };
+    template<typename T, typename ...TS> struct pop_front <typelist<T, TS...>> { using type = typelist<TS...>; };
+
+    template<typename ...TS> 
+    struct at<0, typelist<TS...>> { 
+        static_assert(sizeof...(TS) > 0, "Empty typelist access");
+    };
 
     template<typename T, typename ...TS> 
     struct at<0, typelist<T, TS...>> { 
         using type = T; 
+    };
+
+    template <typename ...TS, std::size_t I>
+    struct at<I, typelist<TS...>> {
+        static_assert(I < (sizeof...(TS)), "Out of bounds access");
     };
 
     template <typename T, typename ...TS, std::size_t I>
