@@ -43,10 +43,9 @@ workspace "mpml"
 
 project "mpml"
     kind "ConsoleApp"
-
     includedirs { "../include" }
     targetdir ".out/%{prj.name}/%{cfg.platform}/%{cfg.buildcfg}"
     objdir ".tmp/%{prj.name}"
 
-    files { "*.cpp" }
+    files { "*.cpp", "../include/*.h" }
 
