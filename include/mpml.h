@@ -25,6 +25,8 @@
 #include <type_traits>
 
 /*
+    -- Version 1.0 --
+
     == Meta-Programming Mini Library ====================
 
     Basic concepts:
