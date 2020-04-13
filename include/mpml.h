@@ -43,7 +43,10 @@
     Read more about it at:
     - https://github.com/galtza/hierarchy-inspector and 
 */
+namespace qcstudio {
 namespace mpml {
+
+    using namespace std;
 
     // type list definition
     template<typename ...TS>
@@ -59,23 +62,23 @@ namespace mpml {
 
     // detect type list types
     template<typename T>
-    struct is_typelist : std::false_type { };
+    struct is_typelist : false_type { };
 
     template<typename ...TS>
-    struct is_typelist<typelist<TS...>> : std::true_type { };
+    struct is_typelist<typelist<TS...>> : true_type { };
 
     // basic operations
     template<typename T, typename TL>    struct push_back;
     template<typename T, typename TL>    struct push_front;
     template<typename TL>                struct pop_front;
-    template<std::size_t I, typename TL> struct at;
+    template<size_t I, typename TL>      struct at;
     template<typename TL>                struct back;
     template<typename TL>                struct front;
 
     template<typename T, typename TL>    using push_back_t  = typename push_back<T, TL>::type;
     template<typename T, typename TL>    using push_front_t = typename push_front<T, TL>::type ;
     template<typename TL>                using pop_front_t  = typename pop_front<TL>::type;
-    template<std::size_t I, typename TL> using at_t         = typename at<I, TL>::type;
+    template<size_t I, typename TL>      using at_t         = typename at<I, TL>::type;
     template<typename TL>                using back_t       = typename at<TL::size - 1, TL>::type;
     template<typename TL>                using front_t      = typename at<0, TL>::type;
 
@@ -93,12 +96,12 @@ namespace mpml {
         using type = T; 
     };
 
-    template <typename ...TS, std::size_t I>
+    template <typename ...TS, size_t I>
     struct at<I, typelist<TS...>> {
         static_assert(I < (sizeof...(TS)), "Out of bounds access");
     };
 
-    template <typename T, typename ...TS, std::size_t I>
+    template <typename T, typename ...TS, size_t I>
     struct at<I, typelist<T, TS...>> {
         static_assert(I < (1 + sizeof...(TS)), "Out of bounds access");
         using type = at_t<I - 1, typelist<TS...>>;
@@ -119,7 +122,7 @@ namespace mpml {
     template <typename T, typename ...TS, template<typename>class PRED>
     struct get_filtered<typelist<T, TS...>, PRED> {
         using remaining_ = filter_t<typelist<TS...>, PRED>;
-        using type = std::conditional_t<
+        using type = conditional_t<
             PRED<T>::value,
             push_front_t<T, remaining_>,
             remaining_
@@ -142,7 +145,7 @@ namespace mpml {
     struct get_the_best<typelist<TS...>, CMP> {
         using first_type = at_t<0, typelist<TS...>>;
         using renaining_types = best_t<pop_front_t<typelist<TS...>>, CMP>;
-        using type  = std::conditional_t<
+        using type  = conditional_t<
             CMP<first_type, renaining_types>::value,
             first_type, renaining_types
         >;
@@ -167,14 +170,14 @@ namespace mpml {
         struct get_ancestors_helper {
 
             template<typename B>
-            using negation_t = typename std::integral_constant<bool, !bool(B::value)>::type;
+            using negation_t = typename integral_constant<bool, !bool(B::value)>::type;
 
             template<typename T, typename U>
-            using cmp = typename std::is_base_of<T, U>::type;
+            using cmp = typename is_base_of<T, U>::type;
             using most_ancient = best_t<SRCLIST, cmp>;
 
             template<typename T>
-            using not_most_ancient_t = negation_t<std::is_same<most_ancient, T>>;
+            using not_most_ancient_t = negation_t<is_same<most_ancient, T>>;
 
             using all_but_most_ancient = filter_t<SRCLIST, not_most_ancient_t>;
 
@@ -199,7 +202,7 @@ namespace mpml {
         static_assert(is_typelist<TYPELIST>::value, "The second parameter type must be mpml::typelist");
 
         template<typename U>
-        using base_of_T = typename std::is_base_of<U, TYPE>::type;
+        using base_of_T = typename is_base_of<U, TYPE>::type;
         using src_list = filter_t<TYPELIST, base_of_T>;
         using type = typename implementation::get_ancestors_helper<
             src_list,
@@ -209,11 +212,12 @@ namespace mpml {
 
     // misc help functions
 
-    template <typename T, std::size_t = sizeof(T)>
-    auto is_defined(T*)  -> std::true_type;
-    auto is_defined(...) -> std::false_type;
+    template <typename T, size_t = sizeof(T)>
+    auto is_defined(T*)  -> true_type;
+    auto is_defined(...) -> false_type;
 
 } // namespace mpml
+} // namespace qcstudio
 
 /*
     == Macro based interface ====================
@@ -228,7 +232,7 @@ namespace mpml {
 
 #define MPML_DECLARE(_name)    INTERNAL_MPML_DECLARE(_name, __COUNTER__)
 #define MPML_ADD(_type, _name) INTERNAL_MPML_ADD(_name, _type, __COUNTER__)
-#define MPML_TYPES(_name)      mpml::_name##_mpml_read_t<__COUNTER__ - 1>
+#define MPML_TYPES(_name)      qcstudio::mpml::_name##_mpml_read_t<__COUNTER__ - 1>
 
 /*
     == Macro based implementation ====================
@@ -237,31 +241,34 @@ namespace mpml {
 */
 
 #define INTERNAL_MPML_DECLARE(_name, _idx)\
+    namespace qcstudio {\
     namespace mpml {\
+        using namespace std;\
+        \
         /* Declare the type-list history starting at entry _idx with an empty one*/\
-        template<std::size_t IDX>\
+        template<size_t IDX>\
         struct _name##_mpml_history;\
         \
-        template<std::size_t IDX>\
+        template<size_t IDX>\
         using _name##_mpml_history_t = typename _name##_mpml_history<IDX>::type;\
         \
         template<> struct _name##_mpml_history<_idx> {\
-            using type = mpml::emptylist;\
+            using type = emptylist;\
         };\
         \
         /* Alias to check if an entry at IDX exists */\
-        template <std::size_t IDX>\
-        using _name##_mpml_is_defined = decltype(mpml::is_defined(std::declval<_name##_mpml_history<IDX>*>()));\
+        template <size_t IDX>\
+        using _name##_mpml_is_defined = decltype(is_defined(declval<_name##_mpml_history<IDX>*>()));\
         \
         /* Define the reader base struct for index 'IDX' */\
-        template<std::size_t IDX, bool = std::is_same<std::true_type, _name##_mpml_is_defined<IDX>>::value>\
+        template<size_t IDX, bool = is_same<true_type, _name##_mpml_is_defined<IDX>>::value>\
         struct _name##_mpml_read;\
         \
-        template<std::size_t IDX>\
-        using _name##_mpml_read_t = typename _name##_mpml_read<IDX, std::is_same<std::true_type, _name##_mpml_is_defined<IDX>>::value>::type;\
+        template<size_t IDX>\
+        using _name##_mpml_read_t = typename _name##_mpml_read<IDX, is_same<true_type, _name##_mpml_is_defined<IDX>>::value>::type;\
         \
         /* When the history entry does exist */\
-        template<std::size_t IDX>\
+        template<size_t IDX>\
         struct _name##_mpml_read<IDX, true> {\
             using type = _name##_mpml_history_t<IDX>;\
         };\
@@ -269,22 +276,20 @@ namespace mpml {
         /* When the history entry does NOT exist, we need to go back until  */\
         /* we get an existing entry or back to the original entry which has */\
         /* the empty type list                                              */\
-        template<std::size_t IDX>\
+        template<size_t IDX>\
         struct _name##_mpml_read<IDX, false> {\
-            using type = std::conditional_t< \
+            using type = conditional_t< \
                 (IDX > _idx),                 /* Are there more specializations to check? */\
                 _name##_mpml_read_t<IDX - 1>, /* yes */\
-                mpml::emptylist               /* no => failed => empty typelist */\
+                emptylist                     /* no => failed => empty typelist */\
             >;\
         };\
-    }
+    }}
 
 #define INTERNAL_MPML_ADD(_name, _type, _idx)\
     /* Define the current type-list at index _idx (entries might not be consecutive) */\
-    namespace mpml {\
-        template<>\
-        struct _name##_mpml_history<_idx> {\
-            using type = push_back_t<_type, _name##_mpml_read_t<_idx - 1>>;\
-        };\
+    template<>\
+    struct qcstudio::mpml::_name##_mpml_history<_idx> {\
+        using type = qcstudio::mpml::push_back_t<_type, qcstudio::mpml::_name##_mpml_read_t<_idx - 1>>;\
     }
 

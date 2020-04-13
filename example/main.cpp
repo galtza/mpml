@@ -84,9 +84,9 @@ auto instance_processor = [](auto _instance) {
 
 template<typename TYPELIST, unsigned LENGTH = TYPELIST::size, unsigned INDEX = 0>
 struct hierarchy_iterator {
-    static_assert(mpml::is_typelist<TYPELIST>::value, "Not a typelist");
+    static_assert(qcstudio::mpml::is_typelist<TYPELIST>::value, "Not a typelist");
     inline static void exec(void* _p) {
-        instance_processor(static_cast<mpml::at_t<INDEX, TYPELIST>*>(_p));
+        instance_processor(static_cast<qcstudio::mpml::at_t<INDEX, TYPELIST>*>(_p));
         hierarchy_iterator<TYPELIST, LENGTH, INDEX + 1>::exec(_p);
     }
 };
@@ -103,13 +103,13 @@ struct hierarchy_iterator<TYPELIST, LENGTH, LENGTH> {
 
 auto main() -> int {
 
-    using D_ANCESTORS = mpml::get_ancestors_t<D, MPML_TYPES(REG_TYPES)>; // <--- Here we read registered types so far
-    using K_ANCESTORS = mpml::get_ancestors_t<K, MPML_TYPES(REG_TYPES)>;
-    using W_ANCESTORS = mpml::get_ancestors_t<W, MPML_TYPES(REG_TYPES)>;
+    using D_ANCESTORS = qcstudio::mpml::get_ancestors_t<D, MPML_TYPES(REG_TYPES)>; // <--- Here we read registered types so far
+    using K_ANCESTORS = qcstudio::mpml::get_ancestors_t<K, MPML_TYPES(REG_TYPES)>;
+    using W_ANCESTORS = qcstudio::mpml::get_ancestors_t<W, MPML_TYPES(REG_TYPES)>;
 
-    using D_EXPECTED  = mpml::typelist<A, C, D>;
-    using K_EXPECTED  = mpml::typelist<F, H, J, I, K>;
-    using W_EXPECTED  = mpml::typelist<F, H, J, I, K, W>;
+    using D_EXPECTED  = qcstudio::mpml::typelist<A, C, D>;
+    using K_EXPECTED  = qcstudio::mpml::typelist<F, H, J, I, K>;
+    using W_EXPECTED  = qcstudio::mpml::typelist<F, H, J, I, K, W>;
 
     static_assert(std::is_same<D_ANCESTORS, D_EXPECTED>::value, "Hierarchy of D test failed");
     static_assert(std::is_same<K_ANCESTORS, K_EXPECTED>::value, "Hierarchy of K test failed");
