@@ -159,6 +159,33 @@ namespace mpml {
     template<typename TYPE, typename TYPELIST>
     using get_ancestors_t = typename get_ancestors<TYPE, TYPELIST>::type;
 
+    // implementation details for 'contains' (see below)
+
+    namespace implementation {
+
+        template<typename T, typename TL>
+        struct contains;
+
+        template<typename T>
+        struct contains<T, typelist<>> {
+            using type = false_type;
+        };
+
+        template<typename T, typename U, typename ...TS>
+        struct contains<T, typelist<U, TS...>> {
+            using remaining_ = typename implementation::contains<T, typelist<TS...>>::type;
+            using type = typename conditional_t<
+                is_same<T, U>::value,
+                true_type,
+                remaining_
+            >;
+        };
+
+    }
+
+    template<typename T, typename TL>
+    using contains = typename implementation::contains<T, TL>::type;
+
     // implementation details for 'get_ancestors' (see below)
 
     namespace implementation {

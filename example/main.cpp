@@ -23,6 +23,7 @@
 */
 #include <iostream>
 #include <iomanip>
+#include <utility>
 #include "mpml.h"
 
 MPML_DECLARE(REG_TYPES); // <--- Here we declare the type list which is initially empty
@@ -103,32 +104,45 @@ struct hierarchy_iterator<TYPELIST, LENGTH, LENGTH> {
 
 auto main() -> int {
 
-    using D_ANCESTORS = qcstudio::mpml::get_ancestors_t<D, MPML_TYPES(REG_TYPES)>; // <--- Here we read registered types so far
-    using K_ANCESTORS = qcstudio::mpml::get_ancestors_t<K, MPML_TYPES(REG_TYPES)>;
-    using W_ANCESTORS = qcstudio::mpml::get_ancestors_t<W, MPML_TYPES(REG_TYPES)>;
+    using namespace qcstudio::mpml;
 
-    using D_EXPECTED  = qcstudio::mpml::typelist<A, C, D>;
-    using K_EXPECTED  = qcstudio::mpml::typelist<F, H, J, I, K>;
-    using W_EXPECTED  = qcstudio::mpml::typelist<F, H, J, I, K, W>;
+    // Test "contains"
+    {
+        static_assert( contains<std::pair<int, float>, typelist<int, float, std::pair<int, float>, double>>::value, "error");
+        static_assert(!contains<std::pair<float, int>, typelist<int, float, std::pair<int, float>, double>>::value, "error");
+        static_assert(!contains<short,                 typelist<int, int, unsigned>                       >::value, "error");
+        static_assert(!contains<short,                 typelist<>                                         >::value, "error");
+    }
 
-    static_assert(std::is_same<D_ANCESTORS, D_EXPECTED>::value, "Hierarchy of D test failed");
-    static_assert(std::is_same<K_ANCESTORS, K_EXPECTED>::value, "Hierarchy of K test failed");
-    static_assert(std::is_same<W_ANCESTORS, W_EXPECTED>::value, "Hierarchy of W test failed");
+    // Test get_ancestors
+    {
+        using D_ANCESTORS = get_ancestors_t<D, MPML_TYPES(REG_TYPES)>; // <--- Here we read registered types so far
+        using K_ANCESTORS = get_ancestors_t<K, MPML_TYPES(REG_TYPES)>;
+        using W_ANCESTORS = get_ancestors_t<W, MPML_TYPES(REG_TYPES)>;
 
-    auto d_instance = D{};
-    std::cout << "\nThe hierarchy tree of class D is:" << std::endl;
-    hierarchy_iterator<D_ANCESTORS>::exec(&d_instance);
-    std::cout << "\n";
+        using D_EXPECTED = typelist<A, C, D>;
+        using K_EXPECTED = typelist<F, H, J, I, K>;
+        using W_EXPECTED = typelist<F, H, J, I, K, W>;
 
-    auto k_instance = K{};
-    std::cout << "The hierarchy tree of class K is:" << std::endl;
-    hierarchy_iterator<K_ANCESTORS>::exec(&k_instance);
-    std::cout << "\n";
+        static_assert(std::is_same<D_ANCESTORS, D_EXPECTED>::value, "Hierarchy of D test failed");
+        static_assert(std::is_same<K_ANCESTORS, K_EXPECTED>::value, "Hierarchy of K test failed");
+        static_assert(std::is_same<W_ANCESTORS, W_EXPECTED>::value, "Hierarchy of W test failed");
 
-    auto w_instance = W{};
-    std::cout << "The hierarchy tree of class W is:" << std::endl;
-    hierarchy_iterator<W_ANCESTORS>::exec(&w_instance);
-    std::cout << std::endl;
+        auto d_instance = D{};
+        std::cout << "\nThe hierarchy tree of class D is:" << std::endl;
+        hierarchy_iterator<D_ANCESTORS>::exec(&d_instance);
+        std::cout << "\n";
+
+        auto k_instance = K{};
+        std::cout << "The hierarchy tree of class K is:" << std::endl;
+        hierarchy_iterator<K_ANCESTORS>::exec(&k_instance);
+        std::cout << "\n";
+
+        auto w_instance = W{};
+        std::cout << "The hierarchy tree of class W is:" << std::endl;
+        hierarchy_iterator<W_ANCESTORS>::exec(&w_instance);
+        std::cout << std::endl;
+    }
 
     return 0;
 }
