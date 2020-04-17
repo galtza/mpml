@@ -53,25 +53,26 @@ class E : public C { };        class I : public H { };
                                class W : public K { };
 
 // note: registry order or duplicated classes do not matter
+// note: we can alternate any type from any hierarchy in the example
 
 MPML_ADD(C, REG_TYPES); // <--- Here we add our first type as the file is being compiled
 MPML_ADD(D, REG_TYPES);
+    MPML_ADD(Z, REG_TYPES);
+    MPML_ADD(H, REG_TYPES);
+    MPML_ADD(I, REG_TYPES);
 MPML_ADD(E, REG_TYPES);
 MPML_ADD(T, REG_TYPES);
+    MPML_ADD(L, REG_TYPES);
 MPML_ADD(B, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
+    MPML_ADD(J, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
+    MPML_ADD(G, REG_TYPES);
+    MPML_ADD(K, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
 
-MPML_ADD(F, REG_TYPES);
-MPML_ADD(G, REG_TYPES);
-MPML_ADD(L, REG_TYPES);
-MPML_ADD(Z, REG_TYPES);
-MPML_ADD(H, REG_TYPES);
-MPML_ADD(I, REG_TYPES);
-MPML_ADD(J, REG_TYPES);
-MPML_ADD(K, REG_TYPES);
-MPML_ADD(W, REG_TYPES);
+    MPML_ADD(F, REG_TYPES);
+    MPML_ADD(W, REG_TYPES);
 
 // This is the function called per instance of type 'auto' (one instance of this function per type)
 

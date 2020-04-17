@@ -48,97 +48,119 @@ namespace mpml {
 
     using namespace std;
 
-    // type list definition
+    /*
+        type list definition
+    */
+
     template<typename ...TS>
     struct typelist {
         static constexpr auto size = sizeof...(TS);
     };
     using emptylist = typelist<>;
 
-    // creation
+    /*
+        creation
+    */
+
     template<typename ...ARGS>
     constexpr auto make_typelist(const ARGS&...)
     -> typelist<ARGS...>;
 
-    // detect type list types
-    template<typename T>
+    /*
+        detection
+    */
+
+    template<typename TYPE>
     struct is_typelist : false_type { };
 
     template<typename ...TS>
     struct is_typelist<typelist<TS...>> : true_type { };
 
-    // basic operations
-    template<typename T, typename TL>    struct push_back;
-    template<typename T, typename TL>    struct push_front;
-    template<typename TL>                struct pop_front;
-    template<size_t I, typename TL>      struct at;
-    template<typename TL>                struct back;
-    template<typename TL>                struct front;
+    /*
+        basic operations
+    */
 
-    template<typename T, typename TL>    using push_back_t  = typename push_back<T, TL>::type;
-    template<typename T, typename TL>    using push_front_t = typename push_front<T, TL>::type ;
-    template<typename TL>                using pop_front_t  = typename pop_front<TL>::type;
-    template<size_t I, typename TL>      using at_t         = typename at<I, TL>::type;
-    template<typename TL>                using back_t       = typename at<TL::size - 1, TL>::type;
-    template<typename TL>                using front_t      = typename at<0, TL>::type;
+    template<typename TYPE, typename TYPELIST> struct push_back;
+    template<typename TYPE, typename TYPELIST> struct push_front;
+    template<typename TYPELIST>                struct pop_front;
+    template<size_t IDX, typename TYPELIST>    struct at;
+    template<typename TYPELIST>                struct back;
+    template<typename TYPELIST>                struct front;
 
-    template<typename T, typename ...TS> struct push_back <T, typelist<TS...>> { using type = typelist<TS..., T>; };
-    template<typename T, typename ...TS> struct push_front<T, typelist<TS...>> { using type = typelist<T, TS...>; };
-    template<typename T, typename ...TS> struct pop_front <typelist<T, TS...>> { using type = typelist<TS...>; };
+    template<typename TYPE, typename TYPELIST> using push_back_t  = typename push_back<TYPE, TYPELIST>::type;
+    template<typename TYPE, typename TYPELIST> using push_front_t = typename push_front<TYPE, TYPELIST>::type ;
+    template<typename TYPELIST>                using pop_front_t  = typename pop_front<TYPELIST>::type;
+    template<size_t IDX, typename TYPELIST>    using at_t         = typename at<IDX, TYPELIST>::type;
+    template<typename TYPELIST>                using back_t       = typename at<TYPELIST::size - 1, TYPELIST>::type;
+    template<typename TYPELIST>                using front_t      = typename at<0, TYPELIST>::type;
+
+    template<typename TYPE, typename ...TS> struct push_back <TYPE, typelist<TS...>> { using type = typelist<TS..., TYPE>; };
+    template<typename TYPE, typename ...TS> struct push_front<TYPE, typelist<TS...>> { using type = typelist<TYPE, TS...>; };
+    template<typename TYPE, typename ...TS> struct pop_front <typelist<TYPE, TS...>> { using type = typelist<TS...>; };
 
     template<typename ...TS> 
     struct at<0, typelist<TS...>> { 
         static_assert(sizeof...(TS) > 0, "Empty typelist access");
     };
 
-    template<typename T, typename ...TS> 
-    struct at<0, typelist<T, TS...>> { 
-        using type = T; 
+    template<typename TYPE, typename ...TS> 
+    struct at<0, typelist<TYPE, TS...>> { 
+        using type = TYPE; 
     };
 
-    template <typename ...TS, size_t I>
-    struct at<I, typelist<TS...>> {
-        static_assert(I < (sizeof...(TS)), "Out of bounds access");
+    template <typename ...TS, size_t IDX>
+    struct at<IDX, typelist<TS...>> {
+        static_assert(IDX < (sizeof...(TS)), "Out of bounds access");
     };
 
-    template <typename T, typename ...TS, size_t I>
-    struct at<I, typelist<T, TS...>> {
-        static_assert(I < (1 + sizeof...(TS)), "Out of bounds access");
-        using type = at_t<I - 1, typelist<TS...>>;
+    template <typename TYPE, typename ...TS, size_t IDX>
+    struct at<IDX, typelist<TYPE, TS...>> {
+        static_assert(IDX < (1 + sizeof...(TS)), "Out of bounds access");
+        using type = at_t<IDX - 1, typelist<TS...>>;
     };
 
-    // 'get_filtered': given a type list, return another type list where the contained types are filtered according to a predicate
-    template<typename TL, template<typename>class PRED>
+    /*
+        'get_filtered'
+
+        given a type list TYPELIST and a predicate PRED, it return another type list with only those elements that satisfy the predicate
+    */
+
+    template<typename TYPELIST, template<typename>class PRED>
     struct get_filtered;
 
-    template<typename TL, template<typename>class PRED>
-    using filter_t = typename get_filtered<TL, PRED>::type;
+    template<typename TYPELIST, template<typename>class PRED>
+    using filter_t = typename get_filtered<TYPELIST, PRED>::type;
 
     template <template<typename>class PRED>
     struct get_filtered<emptylist, PRED> {
         using type = emptylist;
     };
 
-    template <typename T, typename ...TS, template<typename>class PRED>
-    struct get_filtered<typelist<T, TS...>, PRED> {
+    template <typename TYPE, typename ...TS, template<typename>class PRED>
+    struct get_filtered<typelist<TYPE, TS...>, PRED> {
         using remaining_ = filter_t<typelist<TS...>, PRED>;
         using type = conditional_t<
-            PRED<T>::value,
-            push_front_t<T, remaining_>,
+            PRED<TYPE>::value,
+            push_front_t<TYPE, remaining_>,
             remaining_
         >;
     };
 
-    // 'get_the_best': given a type list and a type comparator, return the best type according to the comparator
-    template<typename TL, template<typename,typename>class CMP>
+    /*
+        'get_the_best'
+
+        given a type list TYPELIST and a type comparator CMP,. it returns the best type according to the comparator
+    */
+
+    template<typename TYPELIST, template<typename,typename>class CMP>
     struct get_the_best;
 
-    template<typename TL, template<typename,typename>class CMP>
-    using best_t = typename get_the_best<TL, CMP>::type;
+    template<typename TYPELIST, template<typename,typename>class CMP>
+    using best_t = typename get_the_best<TYPELIST, CMP>::type;
 
-    template <typename T, template<typename,typename>class CMP>
-    struct get_the_best<typelist<T>, CMP> {
-        using type = T;
+    template <typename TYPE, template<typename,typename>class CMP>
+    struct get_the_best<typelist<TYPE>, CMP> {
+        using type = TYPE;
     };
 
     template <typename ...TS, template<typename,typename>class CMP>
@@ -151,7 +173,13 @@ namespace mpml {
         >;
     };
 
-    // declaration of 'get_ancestors'
+    /*
+        'get_ancestors' (See implementation below (1) )
+
+        given a type TYPE and a type list TYPELIST containing types from various hierarchies 
+        (any type in any order), it return the family tree of TYPE among the types in TYPELIST 
+        in descending order.
+    */
 
     template<typename TYPE, typename TYPELIST>
     struct get_ancestors;
@@ -159,70 +187,29 @@ namespace mpml {
     template<typename TYPE, typename TYPELIST>
     using get_ancestors_t = typename get_ancestors<TYPE, TYPELIST>::type;
 
-    // implementation details for 'contains' (see below)
+    /*
+        'contains' (See implementation below (2) )
 
-    namespace implementation {
+        given a type TYPE and a typelist TYPELIST returns the true_type or false_type depending
+        on whether TYPE is contained in TYPELIST or not.
+    */
 
-        template<typename T, typename TL>
+    namespace details {
+        template<typename TYPE, typename TYPELIST>
         struct contains;
-
-        template<typename T>
-        struct contains<T, typelist<>> {
-            using type = false_type;
-        };
-
-        template<typename T, typename U, typename ...TS>
-        struct contains<T, typelist<U, TS...>> {
-            using remaining_ = typename implementation::contains<T, typelist<TS...>>::type;
-            using type = typename conditional_t<
-                is_same<T, U>::value,
-                true_type,
-                remaining_
-            >;
-        };
-
     }
 
-    template<typename T, typename TL>
-    using contains = typename implementation::contains<T, TL>::type;
+    template<typename TYPE, typename TYPELIST>
+    using contains = typename details::contains<TYPE, TYPELIST>::type;
 
-    // implementation details for 'get_ancestors' (see below)
+    /*
+        'get_ancestors' implementation details (1)
+    */
 
-    namespace implementation {
-
+    namespace details {
         template<typename SRCLIST, typename DESTLIST>
-        struct get_ancestors_helper;
-
-        template<typename SRCLIST, typename DESTLIST>
-        struct get_ancestors_helper {
-
-            template<typename B>
-            using negation_t = typename integral_constant<bool, !bool(B::value)>::type;
-
-            template<typename T, typename U>
-            using cmp = typename is_base_of<T, U>::type;
-            using most_ancient = best_t<SRCLIST, cmp>;
-
-            template<typename T>
-            using not_most_ancient_t = negation_t<is_same<most_ancient, T>>;
-
-            using all_but_most_ancient = filter_t<SRCLIST, not_most_ancient_t>;
-
-            using type = typename implementation::get_ancestors_helper<
-                all_but_most_ancient,
-                push_back_t<most_ancient, DESTLIST>
-            >::type;
-
-        };
-
-        template<typename DESTLIST>
-        struct get_ancestors_helper<emptylist, DESTLIST> {
-            using type = DESTLIST;
-        };
-
-    } // namespace implementation
-
-    // 'get_ancestors': given a type and a typelist it returns a typelist with the class hierarchy from most ancient to the type
+        struct get_ancestors;
+    }
 
     template<typename TYPE, typename TYPELIST>
     struct get_ancestors {
@@ -231,16 +218,72 @@ namespace mpml {
         template<typename U>
         using base_of_T = typename is_base_of<U, TYPE>::type;
         using src_list = filter_t<TYPELIST, base_of_T>;
-        using type = typename implementation::get_ancestors_helper<
+        using type = typename details::get_ancestors<
             src_list,
             emptylist
         >::type;
     };
 
-    // misc help functions
+    namespace details {
 
-    template <typename T, size_t = sizeof(T)>
-    auto is_defined(T*)  -> true_type;
+        template<typename SRCLIST, typename DESTLIST>
+        struct get_ancestors {
+
+            template<typename B>
+            using negation_t = typename integral_constant<bool, !bool(B::value)>::type;
+
+            template<typename TYPE1, typename TYPE2>
+            using cmp = typename is_base_of<TYPE1, TYPE2>::type;
+            using most_ancient = best_t<SRCLIST, cmp>;
+
+            template<typename TYPE>
+            using not_most_ancient_t = negation_t<is_same<most_ancient, TYPE>>;
+
+            using all_but_most_ancient = filter_t<SRCLIST, not_most_ancient_t>;
+
+            using type = typename details::get_ancestors<
+                all_but_most_ancient,
+                push_back_t<most_ancient, DESTLIST>
+            >::type;
+
+        };
+
+        template<typename DESTLIST>
+        struct get_ancestors<emptylist, DESTLIST> {
+            using type = DESTLIST;
+        };
+
+    } // namespace details
+
+    /*
+        implementation details for 'contains' (2)
+    */
+
+    namespace details {
+
+        template<typename TYPE>
+        struct contains<TYPE, typelist<>> {
+            using type = false_type;
+        };
+
+        template<typename TYPE, typename U, typename ...TS>
+        struct contains<TYPE, typelist<U, TS...>> {
+            using remaining_ = typename details::contains<TYPE, typelist<TS...>>::type;
+            using type = typename conditional_t<
+                is_same<TYPE, U>::value,
+                true_type,
+                remaining_
+            >;
+        };
+
+    } // namespace details
+
+    /*
+        misc help functions
+    */
+
+    template <typename TYPE, size_t = sizeof(TYPE)>
+    auto is_defined(TYPE*)  -> true_type;
     auto is_defined(...) -> false_type;
 
 } // namespace mpml
@@ -254,7 +297,6 @@ namespace mpml {
     MPML_DECLARE(_name)    -> Equivalent to defining the type-list history
     MPML_ADD(_type, _name) -> Equivalent to defining a new entry in the history of the type-list with the types added
     MPML_TYPES(_name)      -> Equivalent to the type that represents the most updated version of the type-list
-
 */
 
 #define MPML_DECLARE(_name)    INTERNAL_MPML_DECLARE(_name, __COUNTER__)
@@ -319,4 +361,3 @@ namespace mpml {
     struct qcstudio::mpml::_name##_mpml_history<_idx> {\
         using type = qcstudio::mpml::push_back_t<_type, qcstudio::mpml::_name##_mpml_read_t<_idx - 1>>;\
     }
-
