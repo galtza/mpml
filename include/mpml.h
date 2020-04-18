@@ -299,9 +299,10 @@ namespace mpml {
     MPML_TYPES(_name)      -> Equivalent to the type that represents the most updated version of the type-list
 */
 
-#define MPML_DECLARE(_name)    INTERNAL_MPML_DECLARE(_name, __COUNTER__)
-#define MPML_ADD(_type, _name) INTERNAL_MPML_ADD(_name, _type, __COUNTER__)
-#define MPML_TYPES(_name)      qcstudio::mpml::_name##_mpml_read_t<__COUNTER__ - 1>
+#define MPML_DECLARE(_name)         INTERNAL_MPML_DECLARE(_name, __COUNTER__)
+#define MPML_ADD(_type, _name)      INTERNAL_MPML_ADD(_name, _type, __COUNTER__)
+#define MPML_CONTAINS(_type, _name) INTERNAL_MPML_CONTAINS(_name, _type)
+#define MPML_TYPES(_name)           qcstudio::mpml::_name##_mpml_read_t<__COUNTER__ - 1>
 
 /*
     == Macro based implementation ====================
@@ -361,3 +362,5 @@ namespace mpml {
     struct qcstudio::mpml::_name##_mpml_history<_idx> {\
         using type = qcstudio::mpml::push_back_t<_type, qcstudio::mpml::_name##_mpml_read_t<_idx - 1>>;\
     }
+
+#define INTERNAL_MPML_CONTAINS(_name, _type) qcstudio::mpml::contains<_type, MPML_TYPES(_name)>::value

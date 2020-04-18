@@ -52,6 +52,10 @@ class E : public C { };        class I : public H { };
                                class K : public I, public J { };
                                class W : public K { };
 
+class ZZ {
+
+};
+
 // note: registry order or duplicated classes do not matter
 // note: we can alternate any type from any hierarchy in the example
 
@@ -113,6 +117,9 @@ auto main() -> int {
         static_assert(!contains<std::pair<float, int>, typelist<int, float, std::pair<int, float>, double>>::value, "error");
         static_assert(!contains<short,                 typelist<int, int, unsigned>                       >::value, "error");
         static_assert(!contains<short,                 typelist<>                                         >::value, "error");
+
+        static_assert(!MPML_CONTAINS(ZZ, REG_TYPES), "error");
+        static_assert( MPML_CONTAINS(Z,  REG_TYPES), "error");
     }
 
     // Test get_ancestors
