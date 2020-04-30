@@ -1,18 +1,18 @@
 /*
     MIT License
-  
+
     Copyright (c) 2016-2020 Raúl Ramos
-  
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
     to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
     copies of the Software, and to permit persons to whom the Software is
     furnished to do so, subject to the following conditions:
-  
+
     The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
-  
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,7 +41,7 @@
     given instance.
 
     Read more about it at:
-    - https://github.com/galtza/hierarchy-inspector and 
+    - https://github.com/galtza/hierarchy-inspector and
 */
 namespace qcstudio {
 namespace mpml {
@@ -98,14 +98,14 @@ namespace mpml {
     template<typename TYPE, typename ...TS> struct push_front<TYPE, typelist<TS...>> { using type = typelist<TYPE, TS...>; };
     template<typename TYPE, typename ...TS> struct pop_front <typelist<TYPE, TS...>> { using type = typelist<TS...>; };
 
-    template<typename ...TS> 
-    struct at<0, typelist<TS...>> { 
+    template<typename ...TS>
+    struct at<0, typelist<TS...>> {
         static_assert(sizeof...(TS) > 0, "Empty typelist access");
     };
 
-    template<typename TYPE, typename ...TS> 
-    struct at<0, typelist<TYPE, TS...>> { 
-        using type = TYPE; 
+    template<typename TYPE, typename ...TS>
+    struct at<0, typelist<TYPE, TS...>> {
+        using type = TYPE;
     };
 
     template <typename ...TS, size_t IDX>
@@ -122,25 +122,24 @@ namespace mpml {
     /*
         'get_filtered'
 
-        given a type list TYPELIST and a predicate PRED, it return another type list with only those elements that satisfy the predicate
+        given a type list TYPELIST and a trait TRAIT that accepts an arbitrary type,
+        it return another type list with only those elements that evaluate true for
+        the given trait
     */
 
-    template<typename TYPELIST, template<typename>class PRED>
+    template<typename TYPELIST, template<typename>class TRAIT>
     struct get_filtered;
 
-    template<typename TYPELIST, template<typename>class PRED>
-    using filter_t = typename get_filtered<TYPELIST, PRED>::type;
-
-    template <template<typename>class PRED>
-    struct get_filtered<emptylist, PRED> {
+    template <template<typename>class TRAIT>
+    struct get_filtered<emptylist, TRAIT> {
         using type = emptylist;
     };
 
-    template <typename TYPE, typename ...TS, template<typename>class PRED>
-    struct get_filtered<typelist<TYPE, TS...>, PRED> {
-        using remaining_ = filter_t<typelist<TS...>, PRED>;
+    template <typename TYPE, typename ...TS, template<typename>class TRAIT>
+    struct get_filtered<typelist<TYPE, TS...>, TRAIT> {
+        using remaining_ = typename get_filtered<typelist<TS...>, TRAIT>::type;
         using type = conditional_t<
-            PRED<TYPE>::value,
+            TRAIT<TYPE>::value,
             push_front_t<TYPE, remaining_>,
             remaining_
         >;
@@ -176,8 +175,8 @@ namespace mpml {
     /*
         'get_ancestors' (See implementation below (1) )
 
-        given a type TYPE and a type list TYPELIST containing types from various hierarchies 
-        (any type in any order), it return the family tree of TYPE among the types in TYPELIST 
+        given a type TYPE and a type list TYPELIST containing types from various hierarchies
+        (any type in any order), it return the family tree of TYPE among the types in TYPELIST
         in descending order.
     */
 
@@ -217,7 +216,7 @@ namespace mpml {
 
         template<typename U>
         using base_of_T = typename is_base_of<U, TYPE>::type;
-        using src_list = filter_t<TYPELIST, base_of_T>;
+        using src_list = typename get_filtered<TYPELIST, base_of_T>::type;
         using type = typename details::get_ancestors<
             src_list,
             emptylist
@@ -239,7 +238,7 @@ namespace mpml {
             template<typename TYPE>
             using not_most_ancient_t = negation_t<is_same<most_ancient, TYPE>>;
 
-            using all_but_most_ancient = filter_t<SRCLIST, not_most_ancient_t>;
+            using all_but_most_ancient = typename get_filtered<SRCLIST, not_most_ancient_t>::type;
 
             using type = typename details::get_ancestors<
                 all_but_most_ancient,
@@ -269,7 +268,7 @@ namespace mpml {
         template<typename TYPE, typename U, typename ...TS>
         struct contains<TYPE, typelist<U, TS...>> {
             using remaining_ = typename details::contains<TYPE, typelist<TS...>>::type;
-            using type = typename conditional_t<
+            using type = conditional_t<
                 is_same<TYPE, U>::value,
                 true_type,
                 remaining_
