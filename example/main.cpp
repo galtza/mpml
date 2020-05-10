@@ -52,31 +52,28 @@ class E : public C { };        class I : public H { };
                                class K : public I, public J { };
                                class W : public K { };
 
-class ZZ {
-
-};
+class ZZ { };
 
 // note: registry order or duplicated classes do not matter
 // note: we can alternate any type from any hierarchy in the example
 
 MPML_ADD(C, REG_TYPES); // <--- Here we add our first type as the file is being compiled
 MPML_ADD(D, REG_TYPES);
-    MPML_ADD(Z, REG_TYPES);
-    MPML_ADD(H, REG_TYPES);
-    MPML_ADD(I, REG_TYPES);
+                        MPML_ADD(Z, REG_TYPES);
+                        MPML_ADD(H, REG_TYPES);
+                        MPML_ADD(I, REG_TYPES);
 MPML_ADD(E, REG_TYPES);
 MPML_ADD(T, REG_TYPES);
-    MPML_ADD(L, REG_TYPES);
+                        MPML_ADD(L, REG_TYPES);
 MPML_ADD(B, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
-    MPML_ADD(J, REG_TYPES);
+                        MPML_ADD(J, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
-    MPML_ADD(G, REG_TYPES);
-    MPML_ADD(K, REG_TYPES);
+                        MPML_ADD(G, REG_TYPES);
+                        MPML_ADD(K, REG_TYPES);
 MPML_ADD(A, REG_TYPES);
-
-    MPML_ADD(F, REG_TYPES);
-    MPML_ADD(W, REG_TYPES);
+                        MPML_ADD(F, REG_TYPES);
+                        MPML_ADD(W, REG_TYPES);
 
 // This is the function called per instance of type 'auto' (one instance of this function per type)
 
@@ -122,7 +119,32 @@ auto main() -> int {
         static_assert( MPML_CONTAINS(Z,  REG_TYPES), "error");
     }
 
-    // Test get_ancestors
+    // Test "index_of_first"
+    {
+        using TL = typelist<A, C, D, D, D, C, A, D, C>;
+
+        static_assert(index_of_first<C, TL>::value == 1,  "'index_of_first' failed");
+        static_assert(index_of_first<E, TL>::value == -1, "'index_of_first' failed");
+    }
+
+    // Test "concat"
+    {
+        using L1       = typelist<A, B, C>;
+        using L2       = typelist<D, E>;
+        using EXPECTED = typelist<A, B, C, D, E>;
+
+        static_assert(is_same<typename concat<L1, L2>::type, EXPECTED>::value, "'concat' failed");
+    }
+
+    // Test "invert"
+    {
+        using SOURCE   = typelist<A, B, C, D, E>;
+        using EXPECTED = typelist<E, D, C, B, A>;
+
+        static_assert(is_same<invert_t<SOURCE>, EXPECTED>::value, "'invert' failed");
+    }
+
+    // Test "get_ancestors"
     {
         using D_ANCESTORS = get_ancestors_t<D, MPML_TYPES(REG_TYPES)>; // <--- Here we read registered types so far
         using K_ANCESTORS = get_ancestors_t<K, MPML_TYPES(REG_TYPES)>;
@@ -150,14 +172,6 @@ auto main() -> int {
         std::cout << "The hierarchy tree of class W is:" << std::endl;
         hierarchy_iterator<W_ANCESTORS>::exec(&w_instance);
         std::cout << std::endl;
-    }
-
-    // Test "index_of_first"
-    {
-        using TL = typelist<A, C, D, D, D, C, A, D, C>;
-
-        static_assert(index_of_first<C, TL>::value == 1,  "'index_of_first' failed");
-        static_assert(index_of_first<E, TL>::value == -1, "'index_of_first' failed");
     }
 
     return 0;

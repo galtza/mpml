@@ -87,6 +87,7 @@ namespace mpml {
     template<size_t IDX, typename TYPELIST>    struct at;
     template<typename TYPELIST>                struct back;
     template<typename TYPELIST>                struct front;
+    template<typename TL1, typename TL2>       struct concat;
 
     template<typename TYPE, typename TYPELIST> using push_back_t  = typename push_back<TYPE, TYPELIST>::type;
     template<typename TYPE, typename TYPELIST> using push_front_t = typename push_front<TYPE, TYPELIST>::type ;
@@ -94,10 +95,15 @@ namespace mpml {
     template<size_t IDX, typename TYPELIST>    using at_t         = typename at<IDX, TYPELIST>::type;
     template<typename TYPELIST>                using back_t       = typename at<TYPELIST::size - 1, TYPELIST>::type;
     template<typename TYPELIST>                using front_t      = typename at<0, TYPELIST>::type;
+    template<typename TL1, typename TL2>       using concat_t     = typename concat<TL1, TL2>::type;
 
     template<typename TYPE, typename ...TS> struct push_back <TYPE, typelist<TS...>> { using type = typelist<TS..., TYPE>; };
     template<typename TYPE, typename ...TS> struct push_front<TYPE, typelist<TS...>> { using type = typelist<TYPE, TS...>; };
     template<typename TYPE, typename ...TS> struct pop_front <typelist<TYPE, TS...>> { using type = typelist<TS...>; };
+
+    /*
+        'at' operations
+    */
 
     template<typename ...TS>
     struct at<0, typelist<TS...>> {
@@ -118,6 +124,36 @@ namespace mpml {
     struct at<IDX, typelist<TYPE, TS...>> {
         static_assert(IDX < (1 + sizeof...(TS)), "Out of bounds access");
         using type = at_t<IDX - 1, typelist<TS...>>;
+    };
+
+    /*
+        'concat'
+     */
+    template<typename...ARGS1, typename...ARGS2>
+    struct concat<typelist<ARGS1...>, typelist<ARGS2...>> { 
+        using type = typelist<ARGS1..., ARGS2...>; 
+    };
+
+    /*
+        'invert'
+
+        given a list TYPELIST return a new list inverted
+    */
+
+    template<typename TYPELIST>
+    struct invert;
+
+    template<typename TYPELIST>
+    using invert_t = typename invert<TYPELIST>::type;
+
+    template<>
+    struct invert<typelist<>> {
+        using type = typelist<>;
+    };
+
+    template<typename TYPE, typename ...TS>
+    struct invert<typelist<TYPE, TS...>> {
+        using type = concat_t<invert_t<typelist<TS...>>, typelist<TYPE>>;
     };
 
     /*
