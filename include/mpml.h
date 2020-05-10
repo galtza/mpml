@@ -21,6 +21,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
+#pragma once
 
 #include <type_traits>
 
@@ -117,6 +118,28 @@ namespace mpml {
     struct at<IDX, typelist<TYPE, TS...>> {
         static_assert(IDX < (1 + sizeof...(TS)), "Out of bounds access");
         using type = at_t<IDX - 1, typelist<TS...>>;
+    };
+
+    /*
+        'index_of_first'
+
+        given a type TYPE and a list TYPELIST return the index of the first type from TYPELIST
+        that is equal to TYPE. If nothing is found returns -1
+    */
+
+    template<typename TYPE, typename TYPELIST, int N = TYPELIST::size> 
+    struct index_of_first;
+
+    template<typename TYPE, int N>
+    struct index_of_first<TYPE, typelist<>, N> : integral_constant<int, -(N + 1)> {
+    };
+
+    template<typename TYPE, int N, typename ...TS>
+    struct index_of_first<TYPE, typelist<TYPE, TS...>, N> : integral_constant<int, 0> {
+    };
+
+    template<typename TYPE, typename OTHER, int N, typename ...TS>
+    struct index_of_first<TYPE, typelist<OTHER, TS...>, N> : integral_constant<int, 1 + index_of_first<TYPE, typelist<TS...>, N>::value> {
     };
 
     /*

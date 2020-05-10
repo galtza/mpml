@@ -152,5 +152,13 @@ auto main() -> int {
         std::cout << std::endl;
     }
 
+    // Test "index_of_first"
+    {
+        using TL = typelist<A, C, D, D, D, C, A, D, C>;
+
+        static_assert(index_of_first<C, TL>::value == 1,  "'index_of_first' failed");
+        static_assert(index_of_first<E, TL>::value == -1, "'index_of_first' failed");
+    }
+
     return 0;
 }
