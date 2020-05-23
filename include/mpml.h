@@ -340,13 +340,12 @@ namespace mpml {
         misc help functions
     */
 
-    template<typename TYPE, size_t = sizeof(TYPE)>
-    auto is_defined_helper(TYPE*) -> true_type;
-    auto is_defined_helper(...)   -> false_type;
+    template <typename T, size_t = sizeof(T)>
+    auto is_defined_impl(T*)  -> true_type;
+    auto is_defined_impl(...) -> false_type;
 
-    template<typename TYPE>
-    struct is_defined : integral_constant<bool, is_same<true_type, decltype(is_defined_helper(declval<TYPE*>()))>::value> {
-    };
+    template <typename T>
+    using is_defined = decltype(is_defined_impl(declval<T*>()));
 
 } // namespace mpml
 } // namespace qcstudio
