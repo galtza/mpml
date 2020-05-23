@@ -340,9 +340,13 @@ namespace mpml {
         misc help functions
     */
 
-    template <typename TYPE, size_t = sizeof(TYPE)>
-    auto is_defined(TYPE*)  -> true_type;
-    auto is_defined(...) -> false_type;
+    template<typename TYPE, size_t = sizeof(TYPE)>
+    auto is_defined_helper(TYPE*) -> true_type;
+    auto is_defined_helper(...)   -> false_type;
+
+    template<typename TYPE>
+    struct is_defined : integral_constant<bool, is_same<true_type, decltype(is_defined_helper(declval<TYPE*>()))>::value> {
+    };
 
 } // namespace mpml
 } // namespace qcstudio
@@ -368,57 +372,61 @@ namespace mpml {
     Note: it is recommended to read the mentioned articles
 */
 
-#define INTERNAL_MPML_DECLARE(_name, _idx)\
-    namespace qcstudio {\
-    namespace mpml {\
-        using namespace std;\
-        \
-        /* Declare the type-list history starting at entry _idx with an empty one*/\
-        template<size_t IDX>\
-        struct _name##_mpml_history;\
-        \
-        template<size_t IDX>\
-        using _name##_mpml_history_t = typename _name##_mpml_history<IDX>::type;\
-        \
-        template<> struct _name##_mpml_history<_idx> {\
-            using type = emptylist;\
-        };\
-        \
-        /* Alias to check if an entry at IDX exists */\
-        template <size_t IDX>\
-        using _name##_mpml_is_defined = decltype(is_defined(declval<_name##_mpml_history<IDX>*>()));\
-        \
-        /* Define the reader base struct for index 'IDX' */\
-        template<size_t IDX, bool = is_same<true_type, _name##_mpml_is_defined<IDX>>::value>\
-        struct _name##_mpml_read;\
-        \
-        template<size_t IDX>\
-        using _name##_mpml_read_t = typename _name##_mpml_read<IDX, is_same<true_type, _name##_mpml_is_defined<IDX>>::value>::type;\
-        \
-        /* When the history entry does exist */\
-        template<size_t IDX>\
-        struct _name##_mpml_read<IDX, true> {\
-            using type = _name##_mpml_history_t<IDX>;\
-        };\
-        \
-        /* When the history entry does NOT exist, we need to go back until  */\
-        /* we get an existing entry or back to the original entry which has */\
-        /* the empty type list                                              */\
-        template<size_t IDX>\
-        struct _name##_mpml_read<IDX, false> {\
-            using type = conditional_t< \
-                (IDX > _idx),                 /* Are there more specializations to check? */\
-                _name##_mpml_read_t<IDX - 1>, /* yes */\
-                emptylist                     /* no => failed => empty typelist */\
-            >;\
-        };\
+#define INTERNAL_MPML_DECLARE(_name, _idx)                                              \
+    namespace qcstudio {                                                                \
+    namespace mpml {                                                                    \
+        using namespace std;                                                            \
+                                                                                        \
+        /* Declare the type-list history starting at entry _idx with an empty one*/     \
+        template<size_t IDX>                                                            \
+        struct _name##_mpml_history;                                                    \
+                                                                                        \
+        template<size_t IDX>                                                            \
+        using _name##_mpml_history_t = typename _name##_mpml_history<IDX>::type;        \
+                                                                                        \
+        template<> struct _name##_mpml_history<_idx> {                                  \
+            using type = emptylist;                                                     \
+        };                                                                              \
+                                                                                        \
+        /* Check if an entry at IDX exists */                                           \
+        template<size_t IDX>                                                            \
+        struct _name##_mpml_is_defined : is_defined<_name##_mpml_history<IDX>> {        \
+        };                                                                              \
+                                                                                        \
+        /* Define the reader base struct for index 'IDX' */                             \
+        template<size_t IDX, bool = _name##_mpml_is_defined<IDX>::value>                \
+        struct _name##_mpml_read;                                                       \
+                                                                                        \
+        template<size_t IDX>                                                            \
+        using _name##_mpml_read_t = typename _name##_mpml_read<IDX>::type;              \
+                                                                                        \
+        /* When the history entry does exist */                                         \
+        template<size_t IDX>                                                            \
+        struct _name##_mpml_read<IDX, true> {                                           \
+            using type = _name##_mpml_history_t<IDX>;                                   \
+        };                                                                              \
+                                                                                        \
+        /* When the history entry does NOT exist, we need to go back until  */          \
+        /* we get an existing entry or back to the original entry which has */          \
+        /* the empty type list                                              */          \
+        template<size_t IDX>                                                            \
+        struct _name##_mpml_read<IDX, false> {                                          \
+            using type = conditional_t<                                                 \
+                (IDX > _idx),                 /* more specializations? */               \
+                _name##_mpml_read_t<IDX - 1>, /* yes */                                 \
+                emptylist                     /* no => failed => empty TL */            \
+            >;                                                                          \
+        };                                                                              \
     }}
 
-#define INTERNAL_MPML_ADD(_name, _type, _idx)\
-    /* Define the current type-list at index _idx (entries might not be consecutive) */\
-    template<>\
-    struct qcstudio::mpml::_name##_mpml_history<_idx> {\
-        using type = qcstudio::mpml::push_back_t<_type, qcstudio::mpml::_name##_mpml_read_t<_idx - 1>>;\
+#define INTERNAL_MPML_ADD(_name, _type, _idx)                                           \
+    /* Define the current type-list at index _idx (entries might not be consecutive) */ \
+    template<>                                                                          \
+    struct qcstudio::mpml::_name##_mpml_history<_idx> {                                 \
+        using type = qcstudio::mpml::push_back_t<                                       \
+            _type,                                                                      \
+            qcstudio::mpml::_name##_mpml_read_t<_idx - 1>                               \
+        >;                                                                              \
     }
 
 #define INTERNAL_MPML_CONTAINS(_name, _type) qcstudio::mpml::contains<_type, MPML_TYPES(_name)>::value
