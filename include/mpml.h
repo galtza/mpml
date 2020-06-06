@@ -179,6 +179,44 @@ namespace mpml {
     };
 
     /*
+        'contains' (See implementation below (2) )
+
+        given a type TYPE and a typelist TYPELIST returns the true_type or false_type depending
+        on whether TYPE is contained in TYPELIST or not.
+    */
+
+    namespace details {
+        template<typename TYPE, typename TYPELIST>
+        struct contains;
+    }
+
+    template<typename TYPE, typename TYPELIST>
+    using contains = typename details::contains<TYPE, TYPELIST>::type;
+
+    /*
+        'get_without_duplicates'
+
+        given a type list TYPELIST, it return another type list where there are no
+        duplicated types
+    */
+    template<typename TYPELIST>
+    struct get_without_duplicates;
+
+    template<>
+    struct get_without_duplicates<typelist<>> {
+        using type = typelist<>;
+    };
+
+    template<typename T, typename ...TS>
+    struct get_without_duplicates<typelist<T, TS...>> {
+        using type = conditional_t<
+            contains<T, typelist<TS...>>::value,
+            typename get_without_duplicates<typelist<TS...>>::type,
+            typename concat<typelist<T>, typename get_without_duplicates<typelist<TS...>>::type>::type
+        >;
+    };
+
+    /*
         'get_filtered'
 
         given a type list TYPELIST and a trait TRAIT that accepts an arbitrary type,
@@ -244,21 +282,6 @@ namespace mpml {
 
     template<typename TYPE, typename TYPELIST>
     using get_ancestors_t = typename get_ancestors<TYPE, TYPELIST>::type;
-
-    /*
-        'contains' (See implementation below (2) )
-
-        given a type TYPE and a typelist TYPELIST returns the true_type or false_type depending
-        on whether TYPE is contained in TYPELIST or not.
-    */
-
-    namespace details {
-        template<typename TYPE, typename TYPELIST>
-        struct contains;
-    }
-
-    template<typename TYPE, typename TYPELIST>
-    using contains = typename details::contains<TYPE, TYPELIST>::type;
 
     /*
         'get_ancestors' implementation details (1)

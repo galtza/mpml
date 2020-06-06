@@ -119,6 +119,55 @@ auto main() -> int {
         static_assert( MPML_CONTAINS(Z,  REG_TYPES), "error");
     }
 
+    // Test "get_without_duplicates"
+    {
+        // case 1
+        {
+            using TL       = typelist<>;
+            using EXPECTED = typelist<>;
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+
+        // case 2
+        {
+            using TL       = typelist<A>;
+            using EXPECTED = typelist<A>;
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+
+        // case 3
+        {
+            using TL       = typelist<A, A>;
+            using EXPECTED = typelist<A>;
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+
+        // case 4
+        {
+            using TL       = typelist<A, B, A>;
+            using EXPECTED = typelist<B, A>; // Note: not <A, B>
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+        // case 5
+        {
+            using TL       = typelist<B, A, B>;
+            using EXPECTED = typelist<A, B>;
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+        // case 5
+        {
+            using TL       = typelist<A, B, C, A, A, B, D, D, D, A, B>;
+            using EXPECTED = typelist<C, D, A, B>;
+            using RESULT   = get_without_duplicates<TL>::type;
+            static_assert(is_same<RESULT, EXPECTED>::value, "error");
+        }
+    }
+
     // Test "index_of_first"
     {
         using TL = typelist<A, C, D, D, D, C, A, D, C>;
