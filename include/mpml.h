@@ -380,29 +380,18 @@ namespace mpml {
         template<size_t IDX>                                                            \
         struct _name##_mpml_history;                                                    \
                                                                                         \
-        template<size_t IDX>                                                            \
-        using _name##_mpml_history_t = typename _name##_mpml_history<IDX>::type;        \
-                                                                                        \
         template<> struct _name##_mpml_history<_idx> {                                  \
             using type = emptylist;                                                     \
         };                                                                              \
                                                                                         \
-        /* Check if an entry at IDX exists */                                           \
-        template<size_t IDX>                                                            \
-        struct _name##_mpml_is_defined : is_defined<_name##_mpml_history<IDX>> {        \
-        };                                                                              \
-                                                                                        \
         /* Define the reader base struct for index 'IDX' */                             \
-        template<size_t IDX, bool = _name##_mpml_is_defined<IDX>::value>                \
+        template<size_t IDX, bool = is_defined<_name##_mpml_history<IDX>>::value>       \
         struct _name##_mpml_read;                                                       \
-                                                                                        \
-        template<size_t IDX>                                                            \
-        using _name##_mpml_read_t = typename _name##_mpml_read<IDX>::type;              \
                                                                                         \
         /* When the history entry does exist */                                         \
         template<size_t IDX>                                                            \
         struct _name##_mpml_read<IDX, true> {                                           \
-            using type = _name##_mpml_history_t<IDX>;                                   \
+            using type = typename _name##_mpml_history<IDX>::type;                      \
         };                                                                              \
                                                                                         \
         /* When the history entry does NOT exist, we need to go back until  */          \
@@ -411,9 +400,9 @@ namespace mpml {
         template<size_t IDX>                                                            \
         struct _name##_mpml_read<IDX, false> {                                          \
             using type = conditional_t<                                                 \
-                (IDX > _idx),                 /* more specializations? */               \
-                _name##_mpml_read_t<IDX - 1>, /* yes */                                 \
-                emptylist                     /* no => failed => empty TL */            \
+                (IDX > _idx),                            /* more specializations? */    \
+                typename _name##_mpml_read<IDX-1>::type, /* yes */                      \
+                emptylist                                /* no => failed => empty TL */ \
             >;                                                                          \
         };                                                                              \
     }}
@@ -424,7 +413,7 @@ namespace mpml {
     struct qcstudio::mpml::_name##_mpml_history<_idx> {                                 \
         using type = qcstudio::mpml::push_back_t<                                       \
             _type,                                                                      \
-            qcstudio::mpml::_name##_mpml_read_t<_idx - 1>                               \
+            typename qcstudio::mpml::_name##_mpml_read<_idx - 1>::type                  \
         >;                                                                              \
     }
 
