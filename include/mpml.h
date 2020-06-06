@@ -363,7 +363,7 @@ namespace mpml {
 #define MPML_DECLARE(_name)         INTERNAL_MPML_DECLARE(_name, __COUNTER__)
 #define MPML_ADD(_type, _name)      INTERNAL_MPML_ADD(_name, _type, __COUNTER__)
 #define MPML_CONTAINS(_type, _name) INTERNAL_MPML_CONTAINS(_name, _type)
-#define MPML_TYPES(_name)           qcstudio::mpml::_name##_mpml_read_t<__COUNTER__ - 1>
+#define MPML_TYPES(_name)           typename qcstudio::mpml::_name##_mpml_read<__COUNTER__ - 1>::type
 
 /*
     == Macro based implementation ====================
