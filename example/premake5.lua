@@ -38,7 +38,7 @@ workspace "mpml"
     filter { "system:macosx", "action:gmake" } toolset "clang"
     filter { "system:windows", "action:vs*"  } buildoptions { "/W3", "/EHsc" }
     filter { "system:linux"                  } links "pthread"
-    filter { "toolset:clang or toolset:gcc"  } buildoptions { "-Wall", "-Wextra", "-pedantic", "-fno-exceptions", "-msse4.2" }
+    filter { "toolset:clang or toolset:gcc"  } buildoptions { "-Wall", "-Wextra", "-fno-exceptions", "-msse4.2" }
     filter { }
 
 project "mpml"
