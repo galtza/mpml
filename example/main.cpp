@@ -75,6 +75,15 @@ MPML_ADD(A, REG_TYPES);
                         MPML_ADD(F, REG_TYPES);
                         MPML_ADD(W, REG_TYPES);
 
+// Register complex classes
+template<typename T, size_t N>
+struct COMPLEX {
+    using type = T;
+    static constexpr auto value = N;
+};
+
+MPML_ADD(MPML_WRAP(COMPLEX<pair<A, B>, 12>), REG_TYPES);
+
 // This is the function called per instance of type 'auto' (one instance of this function per type)
 
 auto instance_processor = [](auto _instance) {
@@ -117,6 +126,8 @@ auto main() -> int {
 
         static_assert(!MPML_CONTAINS(ZZ, REG_TYPES), "error");
         static_assert( MPML_CONTAINS(Z,  REG_TYPES), "error");
+        static_assert(!MPML_CONTAINS(MPML_WRAP(COMPLEX<pair<B, A>, 12>), REG_TYPES), "error");
+        static_assert( MPML_CONTAINS(MPML_WRAP(COMPLEX<pair<A, B>, 12>), REG_TYPES), "error");
     }
 
     // Test "get_without_duplicates"
