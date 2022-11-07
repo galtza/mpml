@@ -24,7 +24,7 @@
 
 workspace "mpml"
 	language "C++"
-	cppdialect "C++14"
+	cppdialect "C++17"
 
     configurations { "Debug", "Release" }
     platforms      { "x64", }
