@@ -1,25 +1,7 @@
 /*
-    MIT License
-
-    Copyright (c) 2016-2022 Raúl Ramos
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+    SPDX-License-Identifier: BSD-3-Clause
+    Copyright (C) 2016-2023 Raúl Ramos
+    See the LICENSE file in the project root for more information.
 */
 #pragma once
 
@@ -85,10 +67,10 @@ namespace qcstudio::mpml {
     */
 
     template<typename... TS>
-    constexpr auto make_tuple_from_typelist() -> std::tuple<TS...>;
+    constexpr auto make_tuple_from_typelist() -> tuple<TS...>;
 
     template<typename TYPELIST>
-    using to_tuple = decltype(foo(std::declval<TYPELIST>()));
+    using to_tuple = decltype(foo(declval<TYPELIST>()));
 
     /*
         querying
@@ -602,26 +584,26 @@ namespace qcstudio::mpml::unit_testing {
         template<typename T>
         inline static void callback(T* _instance) {
             if (_instance) {
-                std::cout << "instance with addr " << _instance << ": as type '" << typeid(T).name() << "'\n";
+                cout << "instance with addr " << _instance << ": as type '" << typeid(T).name() << "'\n";
             }
         }
     };
 
     void execute() {
-        std::cout << "\nClass D hierarchy iteration..." << std::endl;
+        cout << "\nClass D hierarchy iteration..." << endl;
         auto d_instance = D{};
         typelist_iterator<get_ancestors_t<D, MPML_TYPES(MPML_TEST_TL)>, TestPredicate>::step(&d_instance);
-        std::cout << "\n";
+        cout << "\n";
 
-        std::cout << "\nClass K hierarchy iteration..." << std::endl;
+        cout << "\nClass K hierarchy iteration..." << endl;
         auto k_instance = K{};
         typelist_iterator<get_ancestors_t<K, MPML_TYPES(MPML_TEST_TL)>, TestPredicate>::step(&k_instance);
-        std::cout << "\n";
+        cout << "\n";
 
-        std::cout << "\nClass W hierarchy iteration..." << std::endl;
+        cout << "\nClass W hierarchy iteration..." << endl;
         auto w_instance = W{};
         typelist_iterator<get_ancestors_t<W, MPML_TYPES(MPML_TEST_TL)>, TestPredicate>::step(&w_instance);
-        std::cout << std::endl;
+        cout << endl;
     }
 
 }  // namespace qcstudio::mpml::unit_testing
